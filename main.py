@@ -9,9 +9,22 @@ from systems.battle_system import BattleSystem
 from systems.inventory_system import InventorySystem
 
 
-def show_menu():
+# =========================
+# UI / DISPLAY
+# =========================
 
-    print("\n=== RPG MENU ===")
+def clear_line():
+    print("-" * 35)
+
+
+def show_title():
+    clear_line()
+    print("        TEXT RPG GAME")
+    clear_line()
+
+
+def show_menu():
+    print("\n[ MENU UTAMA ]")
     print("1. Lihat Status")
     print("2. Lihat Inventory")
     print("3. Gunakan Potion")
@@ -24,32 +37,57 @@ def show_menu():
     print("0. Exit")
 
 
+def pause():
+    input("\nTekan ENTER untuk lanjut...")
+
+
+# =========================
+# PLAYER INFO
+# =========================
+
+def show_status(player):
+
+    clear_line()
+    print("STATUS PLAYER")
+    clear_line()
+
+    player.show_status()
+
+    print(f"Level : {player.level}")
+    print(f"Gold  : {player.gold}")
+
+
 def show_equipment(player):
 
-    print("\n=== EQUIPMENT ===")
+    clear_line()
+    print("EQUIPMENT")
+    clear_line()
 
     if player.weapon:
-        print(f"Weapon : {player.weapon.name}")
-        print(f"Bonus Damage : {player.weapon.damage}")
+        print(f"Weapon       : {player.weapon.name}")
+        print(f"Bonus Damage : +{player.weapon.damage}")
     else:
-        print("Belum memakai weapon")
+        print("Belum memakai weapon.")
 
+
+# =========================
+# INVENTORY SYSTEM
+# =========================
 
 def use_potion_menu(player):
 
-    found_potion = None
+    potion_found = None
 
     for item in player.inventory:
 
         if isinstance(item, Potion):
-            found_potion = item
+            potion_found = item
             break
 
-    if found_potion:
+    if potion_found:
 
-        player.use_potion(found_potion)
-
-        InventorySystem.remove_item(player, found_potion)
+        player.use_potion(potion_found)
+        InventorySystem.remove_item(player, potion_found)
 
     else:
         print("Potion tidak tersedia!")
@@ -57,59 +95,120 @@ def use_potion_menu(player):
 
 def equip_weapon_menu(player):
 
-    found_weapon = None
+    weapon_found = None
 
     for item in player.inventory:
 
         if isinstance(item, Weapon):
-            found_weapon = item
+            weapon_found = item
             break
 
-    if found_weapon:
+    if weapon_found:
 
-        player.equip_weapon(found_weapon)
+        player.equip_weapon(weapon_found)
 
     else:
         print("Weapon tidak tersedia!")
 
 
+# =========================
+# BATTLE SYSTEM
+# =========================
+
+def fight_goblin(player):
+
+    enemy = Goblin("Goblin Hijau")
+
+    battle = BattleSystem(player, enemy)
+    battle.start_battle()
+
+
+def fight_dragon(player):
+
+    enemy = Dragon("Dragon Api")
+
+    battle = BattleSystem(player, enemy)
+    battle.start_battle()
+
+
+# =========================
+# SHOP SYSTEM
+# =========================
+
 def shop_menu(player):
 
-    print("\n=== SHOP ===")
-    print("1. Buy Potion (50 Gold)")
-    print("2. Buy Steel Sword (100 Gold)")
-    print("0. Kembali")
+    while True:
 
-    choice = input("Pilih item: ")
+        clear_line()
+        print("SHOP")
+        clear_line()
 
-    if choice == "1":
+        print(f"Gold Kamu : {player.gold}")
+        print("\n1. Health Potion  (50 Gold)")
+        print("2. Steel Sword    (100 Gold)")
+        print("0. Kembali")
 
-        if player.gold >= 50:
+        choice = input("\nPilih item: ")
 
-            potion = Potion("Health Potion", 50, 30)
+        # BUY POTION
+        if choice == "1":
 
-            player._gold -= 50
+            if player.gold >= 50:
 
-            InventorySystem.add_item(player, potion)
+                potion = Potion("Health Potion", 50, 30)
+
+                player._gold -= 50
+
+                InventorySystem.add_item(player, potion)
+
+                print("Berhasil membeli Health Potion!")
+
+            else:
+                print("Gold tidak cukup!")
+
+        # BUY WEAPON
+        elif choice == "2":
+
+            if player.gold >= 100:
+
+                sword = Weapon("Steel Sword", 100, 20)
+
+                player._gold -= 100
+
+                InventorySystem.add_item(player, sword)
+
+                print("Berhasil membeli Steel Sword!")
+
+            else:
+                print("Gold tidak cukup!")
+
+        # EXIT SHOP
+        elif choice == "0":
+
+            break
 
         else:
-            print("Gold tidak cukup!")
+            print("Pilihan tidak valid!")
 
-    elif choice == "2":
-
-        if player.gold >= 100:
-
-            sword = Weapon("Steel Sword", 100, 20)
-
-            player._gold -= 100
-
-            InventorySystem.add_item(player, sword)
-
-        else:
-            print("Gold tidak cukup!")
+        pause()
 
 
-def main():
+# =========================
+# PLAYER ACTION
+# =========================
+
+def rest_player(player):
+
+    player._hp = player.max_hp
+
+    print("HP berhasil dipulihkan!")
+
+
+# =========================
+# GAME SETUP
+# =========================
+
+def create_player():
 
     player = Player("Knight", 100, 15, 1)
 
@@ -119,62 +218,76 @@ def main():
     InventorySystem.add_item(player, starter_sword)
     InventorySystem.add_item(player, starter_potion)
 
+    return player
+
+
+# =========================
+# MAIN GAME LOOP
+# =========================
+
+def main():
+
+    player = create_player()
+
     while True:
 
+        show_title()
         show_menu()
 
-        choice = input("Pilih menu: ")
+        choice = input("\nPilih menu: ")
 
         # STATUS
         if choice == "1":
 
-            player.show_status()
-
-            print(f"Level : {player.level}")
-            print(f"Gold  : {player.gold}")
+            show_status(player)
+            pause()
 
         # INVENTORY
         elif choice == "2":
 
+            clear_line()
+            print("INVENTORY")
+            clear_line()
+
             InventorySystem.show_inventory(player)
+
+            pause()
 
         # USE POTION
         elif choice == "3":
 
             use_potion_menu(player)
+            pause()
 
         # EQUIP WEAPON
         elif choice == "4":
 
             equip_weapon_menu(player)
+            pause()
 
         # FIGHT GOBLIN
         elif choice == "5":
 
-            enemy = Goblin("Goblin Hijau")
-
-            battle = BattleSystem(player, enemy)
-            battle.start_battle()
+            fight_goblin(player)
+            pause()
 
         # FIGHT DRAGON
         elif choice == "6":
 
-            enemy = Dragon("Dragon Api")
-
-            battle = BattleSystem(player, enemy)
-            battle.start_battle()
+            fight_dragon(player)
+            pause()
 
         # EQUIPMENT
         elif choice == "7":
 
             show_equipment(player)
+            pause()
 
-        # REST
+        # REST / HEAL
         elif choice == "8":
 
-            player._hp = player.max_hp
-
-            print("HP berhasil dipulihkan!")
+            rest_player(player)
+            pause()
 
         # SHOP
         elif choice == "9":
@@ -184,12 +297,17 @@ def main():
         # EXIT
         elif choice == "0":
 
-            print("Game selesai.")
+            clear_line()
+            print("Game selesai. Terima kasih sudah bermain!")
+            clear_line()
+
             break
 
+        # INVALID INPUT
         else:
 
             print("Pilihan tidak valid!")
+            pause()
 
 
 if __name__ == "__main__":

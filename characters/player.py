@@ -1,6 +1,4 @@
 from characters.character import Character
-
-
 class Player(Character):
 
     def __init__(self, name, hp, attack_power, level):
